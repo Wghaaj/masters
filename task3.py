@@ -1,35 +1,53 @@
-import re
+import sys
+from pathlib import Path
+from colorama import Fore, Style, init
 
-def normalize_phone(tel):
+init(autoreset=True)
+
+
+def show_directory(path, level=0):
+
     """
-    Normalize a phone number to the format +380XXXXXXXXX.
+    Task 3 - Directory Structure
 
-    args: tel(str): A phone number string
+    This script displays the files and folders inside a given directory.
 
-    function: 
-        - remove all non-digit characters from the input string
-        - check if country code is present, if not add +38
-        - check if the number has 12 digits, if not return an error message
+    It uses sys.argv to get the directory path, pathlib to work with files
+    and folders, and colorama to display them in different colours.
 
-    returns: The normalized phone number as str in the format +380XXXXXXXXX or an error message if the input is invalid.
+    The show_directory() function goes through folders recursively and
+    prints their contents. The script also checks if the path exists
+    and handles errors.
     """
+    try:
+        items = sorted(path.iterdir(), key=lambda item: (item.is_file(), item.name.lower()))
 
-    digits = re.sub(r"\D", "", tel) 
+        for item in items:
+            indent = "    " * level
 
-    if len(digits) == 10 and digits.startswith("0"):
-        digits = "+38" + digits
-    elif len(digits) == 12 and digits.startswith("380"):
-        digits = "+" + digits
+            if item.is_dir():
+                print(indent + Fore.BLUE + "📂 " + item.name + Style.RESET_ALL)
+                show_directory(item, level + 1)
+
+            else:
+                print(indent + Fore.GREEN + "📄 " + item.name + Style.RESET_ALL)
+
+    except PermissionError:
+        print(Fore.RED + "Error: Access denied to " + str(path))
+
+
+if len(sys.argv) < 2:
+    print(Fore.RED + "Error: Please provide a directory path.")
+
+else:
+    path = Path(sys.argv[1])
+
+    if not path.exists():
+        print(Fore.RED + "Error: Path does not exist.")
+
+    elif not path.is_dir():
+        print(Fore.RED + "Error: Path is not a directory.")
+
     else:
-        return "Invalid phone number format. Please provide a valid phone number."
-
-    return digits
-
-
-print ("Normalized phone number:", normalize_phone("0501234567")) # +380501234567
-print ("Normalized phone number:", normalize_phone("+38(050)123-32-34")) # +380501233234
-print ("Normalized phone number:", normalize_phone("38050-111-22-22")) # +380501112222
-print ("Normalized phone number:", normalize_phone("  (095) 234-5678 ")) # +380952345678
-print ("Normalized phone number:", normalize_phone("123")) # "Invalid phone number format..."
-
-
+        print(Fore.BLUE + "📂 " + path.name)
+        show_directory(path)

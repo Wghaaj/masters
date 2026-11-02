@@ -1,36 +1,45 @@
-from random import random
-
-def get_numbers_ticket(min, max, quantity):
+def get_cats_info(path):
     """
-        Get min, max, quantity values for lotery tickets 
-        
-        args: min(int): not less than 1 
-            max(int): not greater than 1000 
-            quantity(int): between min and max 
-        
-        returns: sorted list of unique random numbers
-                empty list if invalid input
+    Cats Information
+
+    The get_cats_info() function reads information about cats from a text file.
+
+    It uses with open() to read the file and split() to separate the cat's
+    ID, name and age. Each cat is stored as a dictionary with three keys.
+
+    The function returns a list of dictionaries and uses try/except
+    to handle missing files or invalid data.
     """
 
-    if not all(type (x) is int for x in(min, max, quantity)):
+
+    cats = []
+
+    try:
+        with open(path, "r", encoding="utf-8") as file:
+            for line in file:
+                if not line.strip():
+                    continue
+
+                cat_id, name, age = line.strip().split(",")
+
+                cat = {
+                    "id": cat_id,
+                    "name": name,
+                    "age": age
+                }
+
+                cats.append(cat)
+
+        return cats
+
+    except FileNotFoundError:
+        print("Error: File not found.")
         return []
 
-    if min <1 or max > 1000 or min > max:
+    except (ValueError, UnicodeError):
+        print("Error: Invalid file data.")
         return []
 
-    if quantity < 1 or quantity > (max - min + 1):
-        return []
 
-    numbers = set()
-    while len(numbers) < quantity:
-        number = int(random() * (max - min + 1)) + min
-        numbers.add(number)
-    
-    return sorted(list(numbers))
-
-print("Lottery ticket numbers:", get_numbers_ticket(1, 50, 5)) # [1, 2, 3, 4, 5] (example output)
-print("Lottery ticket numbers:", get_numbers_ticket(4, 30, 3)) # [4, 5, 6] (example output)
-print("Lottery ticket numbers:", get_numbers_ticket(10, 5, 3)) #[] (invalid input)
-print("Lottery ticket numbers:", get_numbers_ticket(2, "5", 3)) #[] 
-
-
+cats_info = get_cats_info("cats_file.txt")
+print(cats_info)

@@ -1,24 +1,42 @@
-from datetime import datetime
-
-def get_days_from_today(date):
+def total_salary(path):
     """
-        Calculate the number of days from given date to today.
+    Total and Average Salary
 
-        args: date(str): A date string in the format 'YYYY-MM-DD'.
+    The total_salary() function reads salaries from a text file and calculates
+    the total and average salary of all employees.
 
-        returns: int: The number of days from the given date to today.
-        error message: invalid date format
+    The function returns a tuple with the total and average salary.
+
     """
 
+
+
+    total = 0
+    count = 0
 
     try:
-        now = datetime.today().date()
-        timeline = datetime.strptime(date, "%Y-%m-%d").date() 
-        difference = now - timeline
-        return difference.days
-    except(ValueError, TypeError):
-        return "Invalid date format. Please use 'YYYY-MM-DD'."
+        with open(path, "r", encoding="utf-8") as file:
+            for line in file:
+                name, salary = line.strip().split(",")
+                total += int(salary)
+                count += 1
 
-print("Days from today:", get_days_from_today("2026-12-12")) #-48
-print("Days from today:", get_days_from_today("2026-10-17")) #5
-print("Days from today:", get_days_from_today("lala")) # invalid date format. Please use 'YYYY-MM-DD'.
+        if count == 0:
+            return 0, 0
+
+        average = total / count
+        return total, average
+
+    except FileNotFoundError:
+        print("Error: File not found.")
+        return 0, 0
+
+    except (ValueError, UnicodeError):
+        print("Error: Invalid file data.")
+        return 0, 0
+
+
+total, average = total_salary("salary_file.txt")
+
+print(f"Total salary: {total}")
+print(f"Average salary: {average:g}")

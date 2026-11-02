@@ -1,66 +1,115 @@
-from datetime import datetime, timedelta
-
-
-def get_upcoming_birthdays(users):
+def parse_input(user_input):
     """
-        Find birthdays occurring within the next 7 days.
+    Task 4 - Assistant Bot
 
-        Move weekend congratulations to the following Monday.
+    This program is a simple console bot that stores names and phone numbers.
 
-        Args:
-            users (list): List of dictionaries containing names and birthdays.
+    The parse_input() function separates the command from its arguments.
+    The add_contact() function saves a new contact, change_contact() updates
+    an existing number, and show_phone() finds a phone number by name.
+    The show_all() function displays all saved contacts.
 
-        Returns:
-            list: Dictionaries containing names and congratulation dates.eturn a list of dictionaries with the person's name and when to congratulate them 
-
+    The main() function runs the bot and processes user commands until
+    the user enters "exit" or "close".
     """
 
-    today  = datetime.today().date()
-
-    new_users = []
-
-    for user in users:
-        birthday  = datetime.strptime(user["birthday"], "%Y.%m.%d").date()
-        next_birthday = birthday.replace(year=today.year)
-        if next_birthday < today:
-            next_birthday = next_birthday.replace(year=today.year + 1)
-
-        difference = (next_birthday - today).days
-        if 0 <= difference <= 7:
-            if next_birthday.weekday() == 5:  # Saturday
-                next_birthday += timedelta(days=2) 
-            elif next_birthday.weekday() == 6:  # Sunday
-                next_birthday += timedelta(days=1) 
-
-            new_users.append({"name": user["name"], "congratulation_date": next_birthday.strftime("%Y.%m.%d") })
-
-    return new_users
+    
+    cmd, *args = user_input.split()
+    cmd = cmd.lower()
+    return cmd, *args
 
 
-users = [
-    {"name": "Alice", "birthday": "1990.12.15"},
-    {"name": "Bob", "birthday": "1985.12.20"},
-    {"name": "Charlie", "birthday": "1992.12.25"},
-    {"name": "David", "birthday": "1988.12.30"},
-    {"name": "Eve", "birthday": "1995.01.02"}
-] # no upcoming 
+def add_contact(args, contacts):
+    if len(args) != 2:
+        return "Invalid command."
 
-users = [
-    {"name": "Alice", "birthday": "1990.10.27"},
-    {"name": "Bob", "birthday": "1985.11.01"},
-    {"name": "Charlie", "birthday": "1992.10.31"},
-    {"name": "David", "birthday": "1988.12.30"},
-    {"name": "Eve", "birthday": "1995.01.02"}
-] # 3 upcoming
+    name, phone = args
+    contacts[name.lower()] = phone
+    return "Contact added."
 
 
-upcoming_birthdays = get_upcoming_birthdays(users)
+def change_contact(args, contacts):
+    if len(args) != 2:
+        return "Invalid command."
 
-print("Upcoming birthdays within a week: ")
+    name, phone = args
+    name = name.lower()
 
-if not upcoming_birthdays:
-    print("No upcoming birthdays") 
-else:
-    for user in upcoming_birthdays:
-        print(f"{user['name']} : {user['congratulation_date']}") 
+    if name in contacts:
+        contacts[name] = phone
+        return "Contact updated."
+    else:
+        return "Contact not found."
 
+
+def show_phone(args, contacts):
+    if len(args) != 1:
+        return "Invalid command."
+
+    name = args[0].lower()
+
+    if name in contacts:
+        return contacts[name]
+    else:
+        return "Contact not found."
+
+
+def show_all(contacts):
+    if not contacts:
+        return "No contacts found."
+
+    result = ""
+
+    for name, phone in contacts.items():
+        result += f"{name}: {phone}\n"
+
+    return result.strip()
+
+
+def main():
+    contacts = {}
+    print("Welcome to the assistant bot!")
+
+    while True:
+        user_input = input("Enter a command: ").strip()
+
+        if not user_input:
+            print("Invalid command.")
+            continue
+
+        command, *args = parse_input(user_input)
+
+        if command in ["close", "exit"]:
+            if args:
+                print("Invalid command.")
+                continue
+            print("Good bye!")
+            break
+
+        elif command == "hello":
+            if args:
+                print("Invalid command.")
+            else:
+                print("How can I help you?")
+
+        elif command == "add":
+            print(add_contact(args, contacts))
+
+        elif command == "change":
+            print(change_contact(args, contacts))
+
+        elif command == "phone":
+            print(show_phone(args, contacts))
+
+        elif command == "all":
+            if args:
+                print("Invalid command.")
+            else:
+                print(show_all(contacts))
+
+        else:
+            print("Invalid command.")
+
+
+if __name__ == "__main__":
+    main()
