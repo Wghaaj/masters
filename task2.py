@@ -1,45 +1,37 @@
-def get_cats_info(path):
+import re
+from typing import Callable
+
+
+def generator_numbers(text: str):
     """
-    Cats Information
+    Task 2: Number Generator and Total Income
 
-    The get_cats_info() function reads information about cats from a text file.
+    Functions:
+    generator_numbers() searches through the given text
+    and uses yield to return each number as a float.
+    sum_profit() takes the text and generator function,
+    then adds all the extracted numbers together.
 
-    It uses with open() to read the file and split() to separate the cat's
-    ID, name and age. Each cat is stored as a dictionary with three keys.
-
-    The function returns a list of dictionaries and uses try/except
-    to handle missing files or invalid data.
+    Result:
+    The program finds all valid numbers in the text
+    and calculates their total sum. It uses a generator
+    to process the numbers without creating an extra list.
     """
 
-
-    cats = []
-
-    try:
-        with open(path, "r", encoding="utf-8") as file:
-            for line in file:
-                if not line.strip():
-                    continue
-
-                cat_id, name, age = line.strip().split(",")
-
-                cat = {
-                    "id": cat_id,
-                    "name": name,
-                    "age": age
-                }
-
-                cats.append(cat)
-
-        return cats
-
-    except FileNotFoundError:
-        print("Error: File not found.")
-        return []
-
-    except (ValueError, UnicodeError):
-        print("Error: Invalid file data.")
-        return []
+    pattern = r"(?<!\S)[+-]?\d+(?:\.\d+)?(?!\S)"
+    for match in re.finditer(pattern, text):
+        yield float(match.group())
 
 
-cats_info = get_cats_info("cats_file.txt")
-print(cats_info)
+def sum_profit(text: str, func: Callable) -> float:
+    return sum(func(text))
+
+
+if __name__ == "__main__":
+    text = (
+        "Загальний дохід працівника складається з декількох частин: "
+        "1000.01 як основний дохід, доповнений додатковими надходженнями "
+        "27.45 і 324.00 доларів."
+    )
+    total_income = sum_profit(text, generator_numbers)
+    print(f"Загальний дохід: {total_income:.2f}")

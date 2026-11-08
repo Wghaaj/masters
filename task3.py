@@ -1,53 +1,99 @@
 import sys
-from pathlib import Path
-from colorama import Fore, Style, init
-
-init(autoreset=True)
+from collections import Counter
+from datetime import datetime
 
 
-def show_directory(path, level=0):
+LEVELS = ("INFO", "DEBUG", "ERROR", "WARNING")
 
+
+def parse_log_line(line: str) -> dict:
     """
-    Task 3 - Directory Structure
+    Task 3: Log File Analysis
 
-    This script displays the files and folders inside a given directory.
+    Functions:
+    parse_log_line() splits each log entry into its details.
+    load_logs() reads the log file and stores the entries.
+    filter_logs_by_level() selects logs of a specific level.
+    count_logs_by_level() counts how many entries belong
+    to each level, and display_log_counts() prints the results
+    in a table.
 
-    It uses sys.argv to get the directory path, pathlib to work with files
-    and folders, and colorama to display them in different colours.
-
-    The show_directory() function goes through folders recursively and
-    prints their contents. The script also checks if the path exists
-    and handles errors.
+    Result:
+    The program reads a log file and displays the number
+    of INFO, DEBUG, ERROR and WARNING entries.
+    It also allows the user to filter logs by level
+    and handles errors if the file cannot be read.
     """
+
+    parts = line.strip().split(maxsplit=3)
+    if len(parts) != 4:
+        raise ValueError("Invalid log line format")
+
+    date, time, level, message = parts
     try:
-        items = sorted(path.iterdir(), key=lambda item: (item.is_file(), item.name.lower()))
+        datetime.strptime(f"{date} {time}", "%Y-%m-%d %H:%M:%S")
+    except ValueError as error:
+        raise ValueError("Invalid date or time in log") from error
 
-        for item in items:
-            indent = "    " * level
+    if level not in LEVELS:
+        raise ValueError("Unknown log level")
 
-            if item.is_dir():
-                print(indent + Fore.BLUE + "📂 " + item.name + Style.RESET_ALL)
-                show_directory(item, level + 1)
-
-            else:
-                print(indent + Fore.GREEN + "📄 " + item.name + Style.RESET_ALL)
-
-    except PermissionError:
-        print(Fore.RED + "Error: Access denied to " + str(path))
+    return {"date": date, "time": time, "level": level, "message": message}
 
 
-if len(sys.argv) < 2:
-    print(Fore.RED + "Error: Please provide a directory path.")
+def load_logs(file_path: str) -> list:
+    logs = []
+    with open(file_path, "r", encoding="utf-8") as file:
+        for number, line in enumerate(file, start=1):
+            if not line.strip():
+                continue
+            try:
+                logs.append(parse_log_line(line))
+            except ValueError as error:
+                raise ValueError(f"Line {number}: {error}") from error
+    return logs
 
-else:
-    path = Path(sys.argv[1])
 
-    if not path.exists():
-        print(Fore.RED + "Error: Path does not exist.")
+def filter_logs_by_level(logs: list, level: str) -> list:
+    # Match the level even if the user types it in lowercase.
+    return [log for log in logs if log["level"] == level.upper()]
 
-    elif not path.is_dir():
-        print(Fore.RED + "Error: Path is not a directory.")
 
-    else:
-        print(Fore.BLUE + "📂 " + path.name)
-        show_directory(path)
+def count_logs_by_level(logs: list) -> dict:
+    counts = Counter(log["level"] for log in logs)
+    return {level: counts[level] for level in LEVELS}
+
+
+def display_log_counts(counts: dict):
+    print(f"{'Рівень логування':<17}| Кількість")
+    print(f"{'-' * 17}|{'-' * 10}")
+    for level, count in counts.items():
+        print(f"{level:<17}| {count}")
+
+
+def main():
+    if len(sys.argv) not in (2, 3):
+        print("Usage: python task3.py logfile.log [level]")
+        return
+
+    try:
+        logs = load_logs(sys.argv[1])
+    except (FileNotFoundError, PermissionError, UnicodeError, OSError, ValueError) as error:
+        print(f"Error: {error}")
+        return
+
+    display_log_counts(count_logs_by_level(logs))
+
+    if len(sys.argv) == 3:
+        level = sys.argv[2].upper()
+        if level not in LEVELS:
+            print("Unknown level. Use INFO, DEBUG, ERROR or WARNING.")
+            return
+
+        print(f"\nДеталі логів для рівня '{level}':")
+        for log in filter_logs_by_level(logs, level):
+            print(f"{log['date']} {log['time']} - {log['message']}")
+
+
+if __name__ == "__main__":
+    main()

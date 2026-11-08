@@ -1,42 +1,37 @@
-def total_salary(path):
+def caching_fibonacci():
     """
-    Total and Average Salary
+    Task 1: Fibonacci Caching
 
-    The total_salary() function reads salaries from a text file and calculates
-    the total and average salary of all employees.
+    Functions:
+    caching_fibonacci() creates a cache dictionary and returns
+    an inner function fibonacci(n). This function calculates
+    Fibonacci numbers using recursion and stores the results
+    in the cache to avoid repeating the same calculations.
 
-    The function returns a tuple with the total and average salary.
-
+    Result:
+    The program calculates Fibonacci numbers and reuses
+    previously saved values, making repeated calculations
+    faster and more efficient.
     """
 
+    cache = {}
+
+    def fibonacci(n):
+        if n <= 0:
+            return 0
+        if n == 1:
+            return 1
+
+        if n in cache:
+            return cache[n]
+
+        cache[n] = fibonacci(n - 1) + fibonacci(n - 2)
+        return cache[n]
+
+    return fibonacci
 
 
-    total = 0
-    count = 0
-
-    try:
-        with open(path, "r", encoding="utf-8") as file:
-            for line in file:
-                name, salary = line.strip().split(",")
-                total += int(salary)
-                count += 1
-
-        if count == 0:
-            return 0, 0
-
-        average = total / count
-        return total, average
-
-    except FileNotFoundError:
-        print("Error: File not found.")
-        return 0, 0
-
-    except (ValueError, UnicodeError):
-        print("Error: Invalid file data.")
-        return 0, 0
-
-
-total, average = total_salary("salary_file.txt")
-
-print(f"Total salary: {total}")
-print(f"Average salary: {average:g}")
+if __name__ == "__main__":
+    fib = caching_fibonacci()
+    print(fib(10))
+    print(fib(15))

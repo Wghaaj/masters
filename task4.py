@@ -1,69 +1,83 @@
+from functools import wraps
+
+
+def input_error(func):
+    """
+    Task 4: Console Assistant with Error Handling
+
+    Functions:
+    parse_input() separates the command from its arguments.
+    The contact functions allow the user to add, update,
+    find and display saved contacts.
+    input_error() is a decorator that catches errors such as
+    ValueError, KeyError and IndexError and returns a message
+    instead of stopping the program.
+    main() runs the bot and processes user commands.
+
+    Result:
+    The bot allows users to manage a simple contact book
+    through the terminal. If the user enters an incorrect
+    command or misses an argument, the program displays
+    an error message and continues running.
+    """
+
+    @wraps(func)
+    def inner(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except ValueError:
+            return "Enter the argument for the command"
+        except IndexError:
+            return "Enter user name"
+        except KeyError:
+            return "Contact not found."
+
+    return inner
+
+
 def parse_input(user_input):
-    """
-    Task 4 - Assistant Bot
-
-    This program is a simple console bot that stores names and phone numbers.
-
-    The parse_input() function separates the command from its arguments.
-    The add_contact() function saves a new contact, change_contact() updates
-    an existing number, and show_phone() finds a phone number by name.
-    The show_all() function displays all saved contacts.
-
-    The main() function runs the bot and processes user commands until
-    the user enters "exit" or "close".
-    """
-
-    
-    cmd, *args = user_input.split()
-    cmd = cmd.lower()
-    return cmd, *args
+    parts = user_input.strip().split()
+    if not parts:
+        return "", []
+    return parts[0].lower(), parts[1:]
 
 
+@input_error
 def add_contact(args, contacts):
     if len(args) != 2:
-        return "Invalid command."
-
+        raise ValueError
     name, phone = args
-    contacts[name.lower()] = phone
+    contacts[name] = phone
     return "Contact added."
 
 
+@input_error
 def change_contact(args, contacts):
     if len(args) != 2:
-        return "Invalid command."
-
+        raise ValueError
     name, phone = args
-    name = name.lower()
-
-    if name in contacts:
-        contacts[name] = phone
-        return "Contact updated."
-    else:
-        return "Contact not found."
+    if name not in contacts:
+        raise KeyError(name)
+    contacts[name] = phone
+    return "Contact updated."
 
 
+@input_error
 def show_phone(args, contacts):
-    if len(args) != 1:
-        return "Invalid command."
-
-    name = args[0].lower()
-
-    if name in contacts:
-        return contacts[name]
-    else:
-        return "Contact not found."
+    name = args[0]
+    return contacts[name]
 
 
+@input_error
 def show_all(contacts):
     if not contacts:
-        return "No contacts found."
+        return "No contacts saved."
+    return "\n".join(f"{name}: {phone}" for name, phone in contacts.items())
 
-    result = ""
 
-    for name, phone in contacts.items():
-        result += f"{name}: {phone}\n"
-
-    return result.strip()
+@input_error
+def say_hello():
+    return "How can I help you?"
 
 
 def main():
@@ -71,42 +85,22 @@ def main():
     print("Welcome to the assistant bot!")
 
     while True:
-        user_input = input("Enter a command: ").strip()
+        user_input = input("Enter a command: ")
+        command, args = parse_input(user_input)
 
-        if not user_input:
-            print("Invalid command.")
-            continue
-
-        command, *args = parse_input(user_input)
-
-        if command in ["close", "exit"]:
-            if args:
-                print("Invalid command.")
-                continue
+        if command in ("close", "exit"):
             print("Good bye!")
             break
-
         elif command == "hello":
-            if args:
-                print("Invalid command.")
-            else:
-                print("How can I help you?")
-
+            print(say_hello())
         elif command == "add":
             print(add_contact(args, contacts))
-
         elif command == "change":
             print(change_contact(args, contacts))
-
         elif command == "phone":
             print(show_phone(args, contacts))
-
         elif command == "all":
-            if args:
-                print("Invalid command.")
-            else:
-                print(show_all(contacts))
-
+            print(show_all(contacts))
         else:
             print("Invalid command.")
 
