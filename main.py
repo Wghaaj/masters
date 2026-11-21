@@ -2,26 +2,28 @@ from collections import UserDict
 from datetime import date, datetime, timedelta
 from functools import wraps
 from colorama import Fore, Style, init
+import pickle
 
 init(autoreset=True)
 
 """
-HW 10: Address Book Bot
+HW 11: Address Book Bot with Data Saving
 
 Classes:
 Field, Name and Phone store and validate contact information.
 Birthday validates dates in DD.MM.YYYY format.
-Record manages contact details, phone numbers and birthdays.
+Record manages phone numbers and birthdays.
 AddressBook stores contacts and finds upcoming birthdays.
 
 Functions:
 The bot supports adding, changing and viewing contacts,
-adding and checking birthdays, and displaying upcoming birthdays.
-Input errors and missing contacts are handled with clear messages.
+managing birthdays, and displaying upcoming birthdays.
+Input errors and missing contacts are handled with messages.
+Pickle is used to save and load the address book from a file.
 
 Result:
-Console-based address book that manages
-contacts using OOP and provides birthday reminders.
+Console-based address book using OOP that saves contacts
+when closing and restores them when the program starts again.
 """
 
 
@@ -251,9 +253,21 @@ def birthdays(args, book):
         for person in upcoming
     )
 
+def save_data(book, filename="addressbook.pkl"):
+    with open(filename, "wb") as file:
+        pickle.dump(book, file)
+
+
+def load_data(filename="addressbook.pkl"):
+    try:
+        with open(filename, "rb") as file:
+            return pickle.load(file)
+    except FileNotFoundError:
+        return AddressBook()
+
 
 def main():
-    book = AddressBook()
+    book = load_data()
     print("Welcome to the assistant bot!")
 
     while True:
@@ -288,6 +302,8 @@ def main():
             print(birthdays(args, book))
         elif command:
             print("Invalid command.")
+
+    save_data(book)
 
 
 if __name__ == "__main__":
